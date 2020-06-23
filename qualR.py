@@ -4,11 +4,25 @@ import datetime as dt
 from bs4 import BeautifulSoup
 
 
-# SOS from:
-# https://stackoverflow.com/questions/43359479/pandas-parsing-2400-instead-of-0000
-
  
 def my_to_datetime(date_str):
+    '''
+    Transform dates
+    with with 01 - 24 hours to 00 - 23 hours.
+    It is based on this question on stackwoverflow:
+        https://stackoverflow.com/questions/43359479/pandas-parsing-2400-instead-of-0000
+
+    Parameters
+    ----------
+    date_str : str
+        string with date.
+
+    Returns
+    -------
+    Timestamp
+        date as Timestamp.
+
+    '''
     if date_str[11:13] != '24':
         return pd.to_datetime(date_str, format='%d/%m/%Y_%H:%M')
 
@@ -19,7 +33,35 @@ def my_to_datetime(date_str):
 
 def cetesb_data_download(cetesb_login, cetesb_password, 
                         start_date, end_date, 
-                        parameter, station, csv=False):     
+                        parameter, station, csv=False):
+    '''
+    Download a parameter for one Air Quality Station station 
+    from CETESB AQS network
+
+    Parameters
+    ----------
+    cetesb_login : str
+        cetesb qualar username.
+    cetesb_password : str
+        cetesb qualar username's password.
+    start_date : str
+        date to start download in %dd/%mm/%YYYY.
+    end_date : str
+        date to end download in %dd/%mm/%YYYY.
+    parameter : int
+        parameter code.
+    station : int
+        AQS code.
+    csv : Bool, optional
+        Export to csv file. The default is False.
+
+    Returns
+    -------
+    dat_complete : pandas DataFrame
+        DataFrame with a column with date and parameter values.
+
+    '''
+     
   
     login_data = {
         'cetesb_login': cetesb_login,
@@ -86,6 +128,31 @@ def cetesb_data_download(cetesb_login, cetesb_password,
 
 def all_photo(cetesb_login, cetesb_password, start_date, end_date, station, 
               csv_photo=False):
+    '''
+    Download photochemical pollutants 
+
+    Parameters
+    ----------
+    cetesb_login : str
+        cetesb qualar username.
+    cetesb_password : str
+        cetesb qualar username's password.
+    start_date : str
+        date to start download in %dd/%mm/%YYYY.
+    end_date : str
+        date to end download in %dd/%mm/%YYYY.
+    station : int
+        AQS code.
+    csv_photo : Bool, optional
+        Export to csv file. The default is False.
+
+    Returns
+    -------
+    all_photo_df : pandas DataFrame
+        Data Frame with date index (America/Sao_Paulo),
+        O3, NO, NO2 and CO columns.
+
+    '''
     o3 = cetesb_data_download(cetesb_login, cetesb_password, 
                               start_date, end_date, 63, station)
     no = cetesb_data_download(cetesb_login, cetesb_password, 
@@ -113,6 +180,35 @@ def all_photo(cetesb_login, cetesb_password, start_date, end_date, station,
     
 def all_met(cetesb_login, cetesb_password, start_date, end_date, station, 
             in_k = False, rm_flag = True, csv_met=False):
+    '''
+    Download meteorological parameters
+
+    Parameters
+    ----------
+    cetesb_login : str
+        cetesb qualar username.
+    cetesb_password : str
+        cetesb qualar username's password.
+    start_date : str
+        date to start download in %dd/%mm/%YYYY.
+    end_date : str
+        date to end download in %dd/%mm/%YYYY.
+    station : int
+        AQS code.
+    in_k : Bool, optional
+        Temperature in Kelvin. The default is False.
+    rm_flag : Bool, optional
+        Filter wind calm and no values wind direction. The default is True.
+    csv_met : Bool, optional
+        Export to csv file. The default is False.
+
+    Returns
+    -------
+    all_met_df : pandas DataFrame
+        Data Frame with date index  (America/Sao_Paulo), 
+        TC, RH, WS and WD columns.
+
+    '''
     tc = cetesb_data_download(cetesb_login, cetesb_password, 
                               start_date, end_date, 25, station)
     rh = cetesb_data_download(cetesb_login, cetesb_password, 
