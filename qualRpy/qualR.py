@@ -119,7 +119,7 @@ def cetesb_data_download(cetesb_login, cetesb_password,
        
     
     dat_complete = all_date.join(dat)
-    file_name = str(parameter) + '_' + str(station) +' .csv'
+    file_name = str(parameter) + '_' + str(station) + '.csv'
     if csv:
         dat_complete.to_csv(file_name, index_label='date')
     else:
