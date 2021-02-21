@@ -1,10 +1,35 @@
 import requests
+import pkg_resources
 import pandas as pd
 import datetime as dt
 from bs4 import BeautifulSoup
 
+def cetesb_aqs():
+    '''
+    Return a dataframe with the air quality stations (AQS) names and codes 
+    required to use cetesb_data_download, all_pol, and all_met functions.
 
- 
+    It contains these fields:
+        name : AQS name
+        code : AQS code
+        lat  : AQS latitude
+        lon  : AQS longitude
+    '''
+    aqs_stream = pkg_resources.resource_stream(__name__, "data/cetesb_lat_lon.csv")
+    return pd.read_csv(aqs_stream)
+
+def cetesb_param():
+    '''
+    Return a dataframe with parameters and their codes required to use
+    cetesb_data_download function.
+
+    It contains these fields:
+        name : Parameter name
+        code : Parameter code
+    '''
+    param_stream = pkg_resources.resource_stream(__name__, "data/cetesb_param.csv")
+    return pd.read_csv(param_stream)
+
 def my_to_datetime(date_str):
     '''
     Transform dates
