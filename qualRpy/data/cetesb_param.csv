@@ -1,0 +1,21 @@
+name,code
+BEN (Benzeno),61
+CO (Monoxido de Carbono),16
+DV (Direcao do Vento),23
+DVG (Direcao do Vento Global),21
+ERT (Enxofre Reduzido Total),19
+HCNM (Hidrocarbonetos Totais menos Metano),59
+MP10 (Particulas Inalaveis),12
+MP2.5 (Particulas Inalaveis Finas),57
+NO (Monoxido de Nitrogenio),17
+NO2 (Dioxido de Nitrogenio),15
+NOx (Oxidos de Nitrogenio),18
+O3 (Ozonio),63
+PRESS (Pressao Atmosferica),29
+RADG (Radiacao Solar Global),26
+RADUV (Radiacao Ultra-violeta),56
+SO2 (Dioxido de Enxofre),13
+TEMP (Temperatura do Ar),25
+TOL (Tolueno),62
+UR (Umidade Relativa do Ar),28
+VV (Velocidade do Vento),24
