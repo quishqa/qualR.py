@@ -56,9 +56,9 @@ def my_to_datetime(date_str):
            dt.timedelta(days=1)
 
 
-def cetesb_data_download(cetesb_login, cetesb_password, 
-                        start_date, end_date, 
-                        parameter, station, csv=False):
+def cetesb_retrieve(cetesb_login, cetesb_password, 
+                    start_date, end_date, 
+                    parameter, station, csv=False):
     '''
     Download a parameter for one Air Quality Station station 
     from CETESB AQS network
@@ -151,8 +151,9 @@ def cetesb_data_download(cetesb_login, cetesb_password,
         return dat_complete
 
 
-def all_photo(cetesb_login, cetesb_password, start_date, end_date, station, 
-              csv_photo=False):
+def cetesb_retrieve_pol(cetesb_login, cetesb_password, 
+                       start_date, end_date, station, 
+                       csv=False):
     '''
     Download photochemical pollutants 
 
@@ -178,14 +179,14 @@ def all_photo(cetesb_login, cetesb_password, start_date, end_date, station,
         O3, NO, NO2 and CO columns.
 
     '''
-    o3 = cetesb_data_download(cetesb_login, cetesb_password, 
-                              start_date, end_date, 63, station)
-    no = cetesb_data_download(cetesb_login, cetesb_password, 
-                              start_date, end_date, 17, station)
-    no2 = cetesb_data_download(cetesb_login, cetesb_password, 
-                               start_date, end_date, 15, station)
-    co = cetesb_data_download(cetesb_login, cetesb_password, 
-                              start_date, end_date, 16, station)
+    o3 = cetesb_retrieve(cetesb_login, cetesb_password, 
+                         start_date, end_date, 63, station)
+    no = cetesb_retrieve(cetesb_login, cetesb_password, 
+                         start_date, end_date, 17, station)
+    no2 = cetesb_retrieve(cetesb_login, cetesb_password, 
+                          start_date, end_date, 15, station)
+    co = cetesb_retrieve(cetesb_login, cetesb_password, 
+                         start_date, end_date, 16, station)
     
     all_photo_df = pd.DataFrame({
         'o3': o3.val,
@@ -196,15 +197,17 @@ def all_photo(cetesb_login, cetesb_password, start_date, end_date, station,
     
     all_photo_df.index = all_photo_df.index.tz_localize('America/Sao_Paulo')
     
-    if csv_photo:
+    if csv:
         all_photo_df.to_csv('all_photo_' + str(station) + '.csv',
                             index_label='date')
     else:
         return all_photo_df
 
     
-def all_met(cetesb_login, cetesb_password, start_date, end_date, station, 
-            in_k = False, rm_flag = True, csv_met=False):
+def cetesb_retrieve_met(cetesb_login, cetesb_password,
+                        start_date, end_date, station, 
+                        in_k = False, rm_flag = True,
+                        csv=False):
     '''
     Download meteorological parameters
 
@@ -234,14 +237,14 @@ def all_met(cetesb_login, cetesb_password, start_date, end_date, station,
         TC, RH, WS and WD columns.
 
     '''
-    tc = cetesb_data_download(cetesb_login, cetesb_password, 
-                              start_date, end_date, 25, station)
-    rh = cetesb_data_download(cetesb_login, cetesb_password, 
-                              start_date, end_date, 28, station)
-    ws = cetesb_data_download(cetesb_login, cetesb_password, 
-                              start_date, end_date, 24, station)
-    wd = cetesb_data_download(cetesb_login, cetesb_password, 
-                              start_date, end_date, 23, station)
+    tc = cetesb_retrieve(cetesb_login, cetesb_password, 
+                         start_date, end_date, 25, station)
+    rh = cetesb_retrieve(cetesb_login, cetesb_password, 
+                         start_date, end_date, 28, station)
+    ws = cetesb_retrieve(cetesb_login, cetesb_password, 
+                         start_date, end_date, 24, station)
+    wd = cetesb_retrieve(cetesb_login, cetesb_password, 
+                         start_date, end_date, 23, station)
     if in_k:
         K = 273.15
     else:
@@ -262,7 +265,7 @@ def all_met(cetesb_login, cetesb_password, start_date, end_date, station,
         all_met_df['wd'].where(filter_flags, inplace=True)
     
     # Export to csv
-    if csv_met:
+    if csv:
         all_met_df.to_csv('all_met_' + str(station) + '.csv',
                             index_label='date')
     else:
