@@ -34,7 +34,7 @@ end_date = "07/01/2021"
 o3_code = 63 # you can check it by qr.cetesb_aqs()
 pin_code = 99 # you can check it by qr.ceteb_param()
 
-o3_pin = qr.cetesb_data_download(
+o3_pin = qr.cetesb_retrieve(
   user_name,
   my_password,
   start_date,
