@@ -185,6 +185,8 @@ def cetesb_retrieve_pol(cetesb_login, cetesb_password,
                          start_date, end_date, 17, station)
     no2 = cetesb_retrieve(cetesb_login, cetesb_password, 
                           start_date, end_date, 15, station)
+    nox = cetesb_retrieve(cetesb_login, cetesb_password, 
+                          start_date, end_date, 18, station)
     co = cetesb_retrieve(cetesb_login, cetesb_password, 
                          start_date, end_date, 16, station)
     
@@ -192,6 +194,7 @@ def cetesb_retrieve_pol(cetesb_login, cetesb_password,
         'o3': o3.val,
         'no': no.val,
         'no2': no2.val,
+        'nox': nox.val,
         'co': co.val
     }, index=o3.index)
     
