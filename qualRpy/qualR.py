@@ -189,13 +189,16 @@ def cetesb_retrieve_pol(cetesb_login, cetesb_password,
                           start_date, end_date, 18, station)
     co = cetesb_retrieve(cetesb_login, cetesb_password, 
                          start_date, end_date, 16, station)
-    
+    so2 = cetesb_retrieve(cetesb_login, cetesb_password, 
+                         start_date, end_date, 13, station)
+
     all_photo_df = pd.DataFrame({
         'o3': o3.val,
         'no': no.val,
         'no2': no2.val,
         'nox': nox.val,
-        'co': co.val
+        'co': co.val,
+        'so2': so2.val
     }, index=o3.index)
     
     all_photo_df.index = all_photo_df.index.tz_localize('America/Sao_Paulo')
