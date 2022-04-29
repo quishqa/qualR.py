@@ -206,8 +206,8 @@ def cetesb_retrieve_pol(cetesb_login, cetesb_password,
                               start_date, end_date, 62, station)
         ben = cetesb_retrieve(cetesb_login, cetesb_password, 
                               start_date, end_date, 61, station)
-        all_photo_df["tol"] = tol.values
-        all_photo_df["ben"] = ben.values
+        all_photo_df["tol"] = tol.val
+        all_photo_df["ben"] = ben.val
 
     all_photo_df.index = all_photo_df.index.tz_localize('America/Sao_Paulo')
     
