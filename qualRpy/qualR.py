@@ -176,7 +176,7 @@ def cetesb_retrieve_pol(cetesb_login, cetesb_password,
     -------
     all_photo_df : pandas DataFrame
         Data Frame with date index (America/Sao_Paulo),
-        O3, NO, NO2 and CO columns.
+        O3, NO, NO2, CO, PM10, PM2.5 columns.
 
     '''
     o3 = cetesb_retrieve(cetesb_login, cetesb_password, 
@@ -191,6 +191,10 @@ def cetesb_retrieve_pol(cetesb_login, cetesb_password,
                          start_date, end_date, 16, station)
     so2 = cetesb_retrieve(cetesb_login, cetesb_password, 
                          start_date, end_date, 13, station)
+    pm10 = cetesb_retrieve(cetesb_login, cetesb_password, 
+                         start_date, end_date, 12, station)
+    pm25 = cetesb_retrieve(cetesb_login, cetesb_password, 
+                         start_date, end_date, 57, station)
 
     all_photo_df = pd.DataFrame({
         'o3': o3.val,
@@ -198,7 +202,9 @@ def cetesb_retrieve_pol(cetesb_login, cetesb_password,
         'no2': no2.val,
         'nox': nox.val,
         'co': co.val,
-        'so2': so2.val
+        'so2': so2.val,
+        'pm10': pm10.val,
+        'pm25': pm25.val
     }, index=o3.index)
 
     if voc:
@@ -212,7 +218,7 @@ def cetesb_retrieve_pol(cetesb_login, cetesb_password,
     all_photo_df.index = all_photo_df.index.tz_localize('America/Sao_Paulo')
     
     if csv:
-        all_photo_df.to_csv('all_photo_' + str(station) + '.csv',
+        all_photo_df.to_csv('all_pol_' + str(station) + '.csv',
                             index_label='date')
     else:
         return all_photo_df
