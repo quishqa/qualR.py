@@ -3,6 +3,10 @@ import pkg_resources
 import pandas as pd
 import datetime as dt
 from bs4 import BeautifulSoup
+from itertools import product as iter_product
+
+from pandas import DataFrame
+
 
 def cetesb_aqs():
     '''
@@ -56,11 +60,11 @@ def my_to_datetime(date_str):
            dt.timedelta(days=1)
 
 
-def cetesb_retrieve(cetesb_login, cetesb_password, 
-                    start_date, end_date, 
-                    parameter, station, csv=False):
-    '''
-    Download a parameter for one Air Quality Station station 
+def cetesb_retrieve(cetesb_login: str, cetesb_password: str,
+                    start_date: str, end_date :str,
+                    parameter: int | list[int], station: int | list[int], csv: bool=False, all_dates: bool=True) -> pd.DataFrame | None:
+    """
+    Download a parameter for one Air Quality Station station
     from CETESB AQS network
 
     Parameters
@@ -73,64 +77,85 @@ def cetesb_retrieve(cetesb_login, cetesb_password,
         date to start download in %dd/%mm/%YYYY.
     end_date : str
         date to end download in %dd/%mm/%YYYY.
-    parameter : int
+    parameter : int or list of int
         parameter code.
-    station : int
+    station : int or list of int
         AQS code.
     csv : Bool, optional
         Export to csv file. The default is False.
+    all_dates : Bool, optional
+        Make a complete df with all dates. Setting as false can reduce the output size.
+        The default is True.
 
     Returns
     -------
     dat_complete : pandas DataFrame
         DataFrame with a column with date and parameter values.
+    """
 
-    '''
-
+    start_date = '01/01/2000'
+    end_date = '01/02/2000'
 
     login_data = {
         'cetesb_login': cetesb_login,
         'cetesb_password': cetesb_password
     }
 
-    search_data = {
+    search_data_list = []
+    search_data_proto = {
         'irede': 'A',
         'dataInicialStr': start_date,
         'dataFinalStr': end_date,
-        'iTipoDado': 'P',
-        'estacaoVO.nestcaMonto': station,
-        'parametroVO.nparmt': parameter
+        'iTipoDado': 'P'
     }
 
+    if type(station) is not list:
+        station = [station]
+    if type(parameter) is not list:
+        parameter = [parameter]
+
+    for station_number, parameter_number in iter_product(station, parameter):
+        search_data_station = search_data_proto.copy()
+        search_data_station['estacaoVO.nestcaMonto'] = station_number
+        search_data_station['parametroVO.nparmt'] = parameter_number
+        search_data_list.append(search_data_station)
+
+    soup_list = []
     with requests.Session() as s:
         url = "https://qualar.cetesb.sp.gov.br/qualar/autenticador"
-        r = s.post(url, data=login_data)
+        _ = s.post(url, data=login_data)
         url2 = "https://qualar.cetesb.sp.gov.br/qualar/exportaDados.do?method=pesquisar"
-        r = s.post(url2, data=search_data)
-        soup = BeautifulSoup(r.content, 'lxml')
+        for search_data in search_data_list:
+            r = s.post(url2, data=search_data)
+            soup_list.append(BeautifulSoup(r.content, 'lxml'))
 
-    data = []
-    table = soup.find('table', attrs={'id': 'tbl'})
-    rows = table.find_all('tr')
-    row_data = rows[2:]
-    for row in row_data:
-        cols = row.find_all('td')
-        cols = [ele.text.strip() for ele in cols]
-        data.append([ele for ele in cols if ele])
+    if all_dates:
+        day1 = pd.to_datetime(start_date, format='%d/%m/%Y')
+        day2 = pd.to_datetime(end_date, format='%d/%m/%Y') + dt.timedelta(days=1)
+        all_date = pd.DataFrame(index=pd.date_range(day1.strftime('%m/%d/%Y'),
+                                                    day2.strftime('%m/%d/%Y'),
+                                                    freq='H'))
 
-    dat = pd.DataFrame(data)
+    # Scrapping cleaning
+    dat_list = []
+    for soup in soup_list:
+        data = []
+        table = soup.find('table', attrs={'id': 'tbl'})
+        rows = table.find_all('tr')
+        row_data = rows[2:]
+        for row in row_data:
+            cols = row.find_all('td')
+            cols = [ele.text.strip() for ele in cols]
+            data.append([ele for ele in cols if ele])
 
-    # Creating a complete df with all dates
-    day1 = pd.to_datetime(start_date, format='%d/%m/%Y')
-    day2 = pd.to_datetime(end_date, format='%d/%m/%Y') + dt.timedelta(days=1)
-    all_date = pd.DataFrame(index=pd.date_range(day1.strftime('%m/%d/%Y'),
-                                                day2.strftime('%m/%d/%Y'),
-                                                freq='H'))
-    if len(dat) <= 1:
-        dat = pd.DataFrame(columns=['day', 'hour', 'name', 'pol_name', 'units', 'val'])
-    else:
+        dat = pd.DataFrame(data)
+
+        if len(dat) <= 1:
+            continue
+
         dat = dat[[3, 4, 6, 7, 8, 9]]
         dat.columns = ['day', 'hour', 'name', 'pol_name', 'units', 'val']
+
         dat['date'] = dat.day + '_' + dat.hour
 
         # Changing date type to string to datestamp
@@ -139,12 +164,22 @@ def cetesb_retrieve(cetesb_login, cetesb_password,
         # Changing val type from string/object to numeric
         dat['val'] = dat.val.str.replace(',', '.').astype(float)
 
-    dat_complete = all_date.join(dat)
+        if all_dates:
+            dat = all_date.join(dat.set_index('date')).dropna(how='all')
+
+            # To avoid duplicated indexes
+            if len(soup_list) > 1:
+                dat.reset_index()
+
+        dat_list.append(dat)
+
+    dat_complete = pd.concat(dat_list, axis=0, ignore_index=True)
+
     if csv:
         file_name = str(parameter) + '_' + str(station) + '.csv'
         dat_complete.to_csv(file_name, index_label='date')
-    else:
-        return dat_complete
+
+    return dat_complete
 
 
 def cetesb_retrieve_pol(cetesb_login, cetesb_password, 
@@ -318,3 +353,4 @@ def cetesb_retrieve_met(cetesb_login, cetesb_password,
         DataFrame with a column with date and parameter values.
 
     '''
+
