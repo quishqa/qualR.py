@@ -323,36 +323,3 @@ def cetesb_retrieve_met(cetesb_login, cetesb_password,
                             index_label='date')
     else:
         return all_met_df
-
-# def compact_cetesb_retrieve(cetesb_login, cetesb_password,
-#                     start_date, end_date,
-#                     parameter, station, csv=False):
-
-'''
-    Download a parameter for one Air Quality Station station 
-    from CETESB AQS network
-
-    Parameters
-    ----------
-    cetesb_login : str
-        cetesb qualar username.
-    cetesb_password : str
-        cetesb qualar username's password.
-    start_date : str
-        date to start download in %dd/%mm/%YYYY.
-    end_date : str
-        date to end download in %dd/%mm/%YYYY.
-    parameter : int
-        parameter code.
-    station : int
-        AQS code.
-    csv : Bool, optional
-        Export to csv file. The default is False.
-
-    Returns
-    -------
-    dat_complete : pandas DataFrame
-        DataFrame with a column with date and parameter values.
-
-    '''
-
