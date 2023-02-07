@@ -65,7 +65,8 @@ def cetesb_retrieve(cetesb_login: str, cetesb_password: str,
                     parameter: int | list[int], station: int | list[int], csv: bool=False, all_dates: bool=True) -> pd.DataFrame | None:
     """
     Download a parameter for one Air Quality Station station
-    from CETESB AQS network
+    from CETESB AQS network. Passing lists of integers to parameter and/or stations
+    generate duplicated indexes.
 
     Parameters
     ----------
@@ -95,6 +96,11 @@ def cetesb_retrieve(cetesb_login: str, cetesb_password: str,
 
     start_date = '01/01/2000'
     end_date = '01/02/2000'
+    # parameter = [12, 63]
+    # station = [72, 120]
+
+    parameter = 12
+    station = 72
 
     login_data = {
         'cetesb_login': cetesb_login,
@@ -167,13 +173,9 @@ def cetesb_retrieve(cetesb_login: str, cetesb_password: str,
         if all_dates:
             dat = all_date.join(dat.set_index('date')).dropna(how='all')
 
-            # To avoid duplicated indexes
-            if len(soup_list) > 1:
-                dat.reset_index()
-
         dat_list.append(dat)
 
-    dat_complete = pd.concat(dat_list, axis=0, ignore_index=True)
+    dat_complete = pd.concat(dat_list, axis=0)
 
     if csv:
         file_name = str(parameter) + '_' + str(station) + '.csv'
