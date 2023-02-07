@@ -94,14 +94,6 @@ def cetesb_retrieve(cetesb_login: str, cetesb_password: str,
         DataFrame with a column with date and parameter values.
     """
 
-    start_date = '01/01/2000'
-    end_date = '01/02/2000'
-    # parameter = [12, 63]
-    # station = [72, 120]
-
-    parameter = 12
-    station = 72
-
     login_data = {
         'cetesb_login': cetesb_login,
         'cetesb_password': cetesb_password
