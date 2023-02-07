@@ -58,7 +58,7 @@ end_date = "07/01/2021"
 o3_code = 63 # you can check it by qr.cetesb_param()
 aqs = qr.cetesb_aqs() # Loading all the aqs
 
-o3_aqs = {aqs_name: cetesb_retrieve(user_name, my_password,
+o3_aqs = {aqs_name: qr.cetesb_retrieve(user_name, my_password,
                                     start_date, end_date,
                                     o3_code, aqs_code)
           for aqs_name, aqs_code in zip(aqs.name, aqs.code)}
