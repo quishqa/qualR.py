@@ -188,11 +188,9 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str, start_date: 
     list[list[str | int | list[int]]], list[list[str | int | list[int]]]]:
     """
     Robust version of cetesb_retrieve for large datasets.
-    Download parameter(s) for Air Quality station(s)
-    from CETESB AQS network.
-    The is saved in a file each iteration.
-    Passing lists of integers to parameter and/or stations generate duplicated indexes.
-    This function do not return the final data, but save it as a csv.
+    Download parameter(s) for Air Quality station(s) from CETESB AQS network.
+    This function returns a report of the successiful and failed imports.
+    The dataset and reports are saved in a file each iteration.
 
     Parameters
     ----------
@@ -237,7 +235,11 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str, start_date: 
     if type(parameter) is not list:
         parameter = [parameter]
 
-    # Make header
+    # Make headers
+    successes_path = os.path.splitext(save_path)[0] + '_successes.csv'
+    failures_path = os.path.splitext(save_path)[0] + '_failures.csv'
+    pd.DataFrame(columns=['station', 'parameter']).to_csv(successes_path)
+    pd.DataFrame(columns=['station', 'parameter']).to_csv(failures_path)
     pd.DataFrame(columns=['day', 'hour', 'name', 'pol_name', 'units', 'val']).to_csv(save_path)
 
     # Make scrappers` inputs
@@ -288,6 +290,13 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str, start_date: 
 
         return dat
 
+    def report(failure: bool = False):
+        report_path = successes_path
+        if failure:
+            report_path = failures_path
+        pd.DataFrame([search_data['estacaoVO.nestcaMonto'], search_data['parametroVO.nparmt']],
+                     columns=['station', 'parameter']).to_csv(report_path, mode='a', header=False)
+
     successes = []
     failures = []
     with requests.Session() as s:
@@ -298,14 +307,17 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str, start_date: 
             r = try_request(s, search_data)
             if r is None:
                 failures.append([search_data['estacaoVO.nestcaMonto'], search_data['parametroVO.nparmt']])
+                report(failure=True)
                 continue
             scrap = BeautifulSoup(r.content, 'lxml')
             scrap = clean_scrap(scrap)
             if scrap is None:
                 failures.append([search_data['estacaoVO.nestcaMonto'], search_data['parametroVO.nparmt']])
+                report(failure=True)
                 continue
             scrap.to_csv(save_path, mode='a', header=False)
             successes.append([search_data['estacaoVO.nestcaMonto'], search_data['parametroVO.nparmt']])
+            report()
 
     return successes, failures
 
