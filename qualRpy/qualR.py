@@ -243,6 +243,9 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str, start_date: 
     pd.DataFrame(columns=['day', 'hour', 'name', 'pol_name', 'units', 'val']).to_csv(save_path)
 
     # Make scrappers` inputs
+    login_url = "https://qualar.cetesb.sp.gov.br/qualar/autenticador"
+    request_url = "https://qualar.cetesb.sp.gov.br/qualar/exportaDados.do?method=pesquisar"
+
     login_data = {
         'cetesb_login': cetesb_login,
         'cetesb_password': cetesb_password
@@ -273,7 +276,6 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str, start_date: 
             cols = row.find_all('td')
             cols = [ele.text.strip() for ele in cols]
             data.append([ele for ele in cols if ele])
-
         dat = pd.DataFrame(data)
 
         if len(dat) <= 1:
@@ -289,12 +291,13 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str, start_date: 
 
     def scrap_table(session, search):
         for _ in range(1, max_iter):
-            request = session.post(url2, data=search)
+            request = session.post(request_url, data=search)
             if request is None:
                 continue
             cleaned_scrap = clean_scrap(BeautifulSoup(request.content, 'lxml'))
             if cleaned_scrap is not None:
                 break
+
         return cleaned_scrap
 
     def report(failure: bool = False):
@@ -307,9 +310,9 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str, start_date: 
     successes = []
     failures = []
     with requests.Session() as s:
-        url = "https://qualar.cetesb.sp.gov.br/qualar/autenticador"
-        _ = s.post(url, data=login_data)
-        url2 = "https://qualar.cetesb.sp.gov.br/qualar/exportaDados.do?method=pesquisar"
+        # Login
+        _ = s.post(login_url, data=login_data)
+        # Request
         for search_data in search_data_list:
             scrap = scrap_table(s, search_data)
             if scrap is None:
