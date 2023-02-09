@@ -260,16 +260,13 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str, start_date: 
         search_data_station['parametroVO.nparmt'] = parameter_number
         search_data_list.append(search_data_station)
 
-    def try_request(session, search):
-        for _ in range(1, max_iter):
-            request = session.post(url2, data=search)
-            if request is not None:
-                return request
-        return None
-
     def clean_scrap(scrap_data):
         data = []
         table = scrap_data.find('table', attrs={'id': 'tbl'})
+
+        if table is None:
+            return None
+
         rows = table.find_all('tr')
         row_data = rows[2:]
         for row in row_data:
@@ -290,6 +287,16 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str, start_date: 
 
         return dat
 
+    def scrap_table(session, search):
+        for _ in range(1, max_iter):
+            request = session.post(url2, data=search)
+            if request is None:
+                continue
+            cleaned_scrap = clean_scrap(BeautifulSoup(request.content, 'lxml'))
+            if cleaned_scrap is not None:
+                break
+        return cleaned_scrap
+
     def report(failure: bool = False):
         report_path = successes_path
         if failure:
@@ -304,13 +311,7 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str, start_date: 
         _ = s.post(url, data=login_data)
         url2 = "https://qualar.cetesb.sp.gov.br/qualar/exportaDados.do?method=pesquisar"
         for search_data in search_data_list:
-            r = try_request(s, search_data)
-            if r is None:
-                failures.append([search_data['estacaoVO.nestcaMonto'], search_data['parametroVO.nparmt']])
-                report(failure=True)
-                continue
-            scrap = BeautifulSoup(r.content, 'lxml')
-            scrap = clean_scrap(scrap)
+            scrap = scrap_table(s, search_data)
             if scrap is None:
                 failures.append([search_data['estacaoVO.nestcaMonto'], search_data['parametroVO.nparmt']])
                 report(failure=True)
