@@ -182,9 +182,11 @@ def cetesb_retrieve(cetesb_login: str, cetesb_password: str,
     return dat_complete
 
 
-def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str, start_date: str, end_date: str,
-                           parameter: int | list[int], station: int | list[int], save_path: str,
-                           max_iter: int = 100, overwrite: bool = False) -> tuple[
+def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str,
+                           start_date: str, end_date: str,
+                           parameter: int | list[int], station: int | list[int],
+                           save_path: str,
+                           max_iter: int = 100) -> tuple[
     list[list[str | int | list[int]]], list[list[str | int | list[int]]]]:
     """
     Robust version of cetesb_retrieve for large datasets.
@@ -207,11 +209,9 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str, start_date: 
     station : int or list of int
         AQS code.
     save_path : str
-        File path or directory. If a directory is passed, a 'data.csv' file is created.
+        File path.
     max_iter : positive int
         Max number of requests in case of failure.
-    overwrite : bool
-        Overwrite existing file. Default is False.
 
     Returns
     -------
@@ -221,15 +221,6 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str, start_date: 
     """
 
     # Assert types
-    assert isinstance(save_path, str), 'save_path must be a string'
-    path = os.path.abspath(save_path)
-    if os.path.isdir(path):
-        assert os.path.exists(save_path), 'Directory not found'
-        save_path = path + 'data.csv'
-    assert os.path.exists(os.path.basename(save_path)), 'Directory not found'
-    if not overwrite:
-        assert os.path.exists(save_path), 'File already exists'
-
     if type(station) is not list:
         station = [station]
     if type(parameter) is not list:
