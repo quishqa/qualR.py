@@ -186,7 +186,7 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str,
                            start_date: str, end_date: str,
                            parameter: int | list[int], station: int | list[int],
                            save_path: str,
-                           max_iter: int = 100) -> tuple[
+                           max_iter: int = 100, verbose=False) -> tuple[
     list[list[str | int | list[int]]], list[list[str | int | list[int]]]]:
     """
     Robust version of cetesb_retrieve for large datasets.
@@ -212,6 +212,7 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str,
         File path.
     max_iter : positive int
         Max number of requests in case of failure.
+    verbose : bool
 
     Returns
     -------
@@ -231,11 +232,13 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str,
     failures_path = os.path.splitext(save_path)[0] + '_failures.csv'
     pd.DataFrame(columns=['station', 'parameter']).to_csv(successes_path)
     pd.DataFrame(columns=['station', 'parameter']).to_csv(failures_path)
-    pd.DataFrame(columns=['day', 'hour', 'name', 'pol_name', 'units', 'val']).to_csv(save_path)
+    pd.DataFrame(columns=['day', 'hour', 'name',
+                          'pol_name', 'units', 'val', 'date']).to_csv(save_path, index=False)
 
     # Make scrappers` inputs
     login_url = "https://qualar.cetesb.sp.gov.br/qualar/autenticador"
-    request_url = "https://qualar.cetesb.sp.gov.br/qualar/exportaDados.do?method=pesquisar"
+    # request_url = "https://qualar.cetesb.sp.gov.br/qualar/exportaDados.do?method=pesquisar"
+    request_url = 'https://qualar.cetesb.sp.gov.br/qualar/exportaDados.do?method=pesquisar'
 
     login_data = {
         'cetesb_login': cetesb_login,
@@ -280,14 +283,22 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str,
 
         return dat
 
-    def scrap_table(session, search):
+    def scrap_table(search):
         for _ in range(1, max_iter):
-            request = session.post(request_url, data=search)
+            if verbose:
+                print('Trying scrap request')
+            request = s.post(request_url, data=search)
+            if verbose:
+                print('Scrap request success')
             if request is None:
+                if verbose:
+                    print('request returned None')
                 continue
             cleaned_scrap = clean_scrap(BeautifulSoup(request.content, 'lxml'))
             if cleaned_scrap is not None:
                 break
+            if verbose:
+                print('Empty scrap')
 
         return cleaned_scrap
 
@@ -295,6 +306,8 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str,
         report_path = successes_path
         if failure:
             report_path = failures_path
+        if verbose:
+            print(search_data['estacaoVO.nestcaMonto'], search_data['parametroVO.nparmt'])
         pd.DataFrame({'station': search_data['estacaoVO.nestcaMonto'],
                       'parameter': search_data['parametroVO.nparmt']},
                      index=[0]).to_csv(report_path, mode='a', header=False)
@@ -302,15 +315,23 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str,
     successes = []
     failures = []
     with requests.Session() as s:
+        if verbose:
+            print('Trying login')
         # Login
         _ = s.post(login_url, data=login_data)
+        if verbose:
+            print('Login successful')
         # Request
         for search_data in search_data_list:
-            scrap = scrap_table(s, search_data)
+            scrap = scrap_table(search_data)
             if scrap is None:
+                if verbose:
+                    print('Scrap fail')
                 failures.append([search_data['estacaoVO.nestcaMonto'], search_data['parametroVO.nparmt']])
                 report(failure=True)
                 continue
+            if verbose:
+                print('Scrap success')
             scrap.to_csv(save_path, mode='a', header=False)
             successes.append([search_data['estacaoVO.nestcaMonto'], search_data['parametroVO.nparmt']])
             report()
