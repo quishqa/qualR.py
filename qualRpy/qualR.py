@@ -295,8 +295,9 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str,
         report_path = successes_path
         if failure:
             report_path = failures_path
-        pd.DataFrame([search_data['estacaoVO.nestcaMonto'], search_data['parametroVO.nparmt']],
-                     columns=['station', 'parameter']).to_csv(report_path, mode='a', header=False)
+        pd.DataFrame({'station': search_data['estacaoVO.nestcaMonto'],
+                      'parameter': search_data['parametroVO.nparmt']},
+                     index=[0]).to_csv(report_path, mode='a', header=False)
 
     successes = []
     failures = []
