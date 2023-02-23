@@ -63,8 +63,8 @@ def my_to_datetime(date_str):
 
 def cetesb_retrieve(cetesb_login: str, cetesb_password: str,
                     start_date: str, end_date: str,
-                    parameter: int | list[int], station: int | list[int], csv: bool = False,
-                    all_dates: bool = True) -> pd.DataFrame | None:
+                    parameter, station, csv: bool = False,
+                    all_dates: bool = True, verbose: bool = False) -> pd.DataFrame:
     """
     Download a parameter for one Air Quality Station station
     from CETESB AQS network. Passing lists of integers to parameter and/or stations
@@ -96,6 +96,9 @@ def cetesb_retrieve(cetesb_login: str, cetesb_password: str,
         DataFrame with a column with date and parameter values.
     """
 
+    login_url = "https://qualar.cetesb.sp.gov.br/qualar/autenticador"
+    request_url = 'https://qualar.cetesb.sp.gov.br/qualar/exportaDados.do?method=pesquisar'
+
     login_data = {
         'cetesb_login': cetesb_login,
         'cetesb_password': cetesb_password
@@ -122,12 +125,23 @@ def cetesb_retrieve(cetesb_login: str, cetesb_password: str,
 
     soup_list = []
     with requests.Session() as s:
-        url = "https://qualar.cetesb.sp.gov.br/qualar/autenticador"
-        _ = s.post(url, data=login_data)
-        url2 = "https://qualar.cetesb.sp.gov.br/qualar/exportaDados.do?method=pesquisar"
+
+        if verbose:
+            print('Loggin in...')
+
+        _ = s.post(login_url, data=login_data)
+
+        if verbose:
+            print('Loggin success.')
+            print('Requesting data...')
+
         for search_data in search_data_list:
-            r = s.post(url2, data=search_data)
+
+            r = s.post(request_url, data=search_data)
             soup_list.append(BeautifulSoup(r.content, 'lxml'))
+
+        if verbose:
+            print('Request success.')
 
     if all_dates:
         day1 = pd.to_datetime(start_date, format='%d/%m/%Y')
@@ -136,11 +150,18 @@ def cetesb_retrieve(cetesb_login: str, cetesb_password: str,
                                                     day2.strftime('%m/%d/%Y'),
                                                     freq='H'))
 
+    if verbose:
+        print('Cleaning data...')
+
     # Scrapping cleaning
     dat_list = []
     for soup in soup_list:
         data = []
         table = soup.find('table', attrs={'id': 'tbl'})
+
+        if type(table) is None:
+            continue
+
         rows = table.find_all('tr')
         row_data = rows[2:]
         for row in row_data:
@@ -169,21 +190,31 @@ def cetesb_retrieve(cetesb_login: str, cetesb_password: str,
 
         dat_list.append(dat)
 
+    if verbose:
+        print('Cleaning complete.')
+
+    if len(dat_list) == 0:
+        if verbose:
+            print('Warning: Empty dataset! Please check if the stations has the parameters available in the timeframe.')
+        return pd.DataFrame(columns=['day', 'hour', 'name', 'pol_name', 'units', 'val', 'date'])
+
     dat_complete = pd.concat(dat_list, axis=0)
 
     if csv:
         file_name = str(parameter) + '_' + str(station) + '.csv'
         dat_complete.to_csv(file_name, index_label='date')
 
+    if verbose:
+        print('Retrieve complete.')
+
     return dat_complete
 
 
 def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str,
                            start_date: str, end_date: str,
-                           parameter: int | list[int], station: int | list[int],
+                           parameter, station,
                            save_path: str,
-                           max_iter: int = 100, verbose=False) -> tuple[
-    list[list[str | int | list[int]]], list[list[str | int | list[int]]]]:
+                           max_iter: int = 100, verbose=False):
     """
     Robust version of cetesb_retrieve for large datasets.
     Download parameter(s) for Air Quality station(s) from CETESB AQS network.
