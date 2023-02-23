@@ -237,7 +237,6 @@ def cetesb_retrieve_robust(cetesb_login: str, cetesb_password: str,
 
     # Make scrappers` inputs
     login_url = "https://qualar.cetesb.sp.gov.br/qualar/autenticador"
-    # request_url = "https://qualar.cetesb.sp.gov.br/qualar/exportaDados.do?method=pesquisar"
     request_url = 'https://qualar.cetesb.sp.gov.br/qualar/exportaDados.do?method=pesquisar'
 
     login_data = {
