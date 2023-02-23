@@ -159,7 +159,7 @@ def cetesb_retrieve(cetesb_login: str, cetesb_password: str,
         data = []
         table = soup.find('table', attrs={'id': 'tbl'})
 
-        if type(table) is None:
+        if table is None:
             continue
 
         rows = table.find_all('tr')
