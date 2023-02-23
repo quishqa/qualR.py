@@ -1,5 +1,3 @@
-from typing import Tuple, List
-
 import requests
 import pkg_resources
 import pandas as pd
@@ -7,8 +5,6 @@ import datetime as dt
 from bs4 import BeautifulSoup
 from itertools import product as iter_product
 import os
-
-from pandas import DataFrame
 
 
 def cetesb_aqs():
