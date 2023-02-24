@@ -1,15 +1,14 @@
+import datetime as dt
 import requests
 import pkg_resources
 import pandas as pd
-import datetime as dt
 from bs4 import BeautifulSoup
 from itertools import product as iter_product
-import os
 
 
 def cetesb_aqs():
     '''
-    Return a dataframe with the air quality stations (AQS) names and codes 
+    Return a dataframe with the air quality stations (AQS) names and codes
     required to use cetesb_data_download, all_pol, and all_met functions.
 
     It contains these fields:
@@ -18,7 +17,8 @@ def cetesb_aqs():
         lat  : AQS latitude
         lon  : AQS longitude
     '''
-    aqs_stream = pkg_resources.resource_stream(__name__, "data/cetesb_lat_lon.csv")
+    aqs_stream = pkg_resources.resource_stream(__name__,
+                                               "data/cetesb_lat_lon.csv")
     return pd.read_csv(aqs_stream)
 
 
@@ -31,7 +31,8 @@ def cetesb_param():
         name : Parameter name
         code : Parameter code
     '''
-    param_stream = pkg_resources.resource_stream(__name__, "data/cetesb_param.csv")
+    param_stream = pkg_resources.resource_stream(__name__,
+                                                 "data/cetesb_param.csv")
     return pd.read_csv(param_stream)
 
 
@@ -67,8 +68,8 @@ def cetesb_retrieve(cetesb_login: str, cetesb_password: str,
                     all_dates: bool = True, verbose: bool = False) -> pd.DataFrame:
     """
     Download a parameter for one Air Quality Station station
-    from CETESB AQS network. Passing lists of integers to parameter and/or stations
-    generate duplicated indexes.
+    from CETESB AQS network. Passing lists of integers to parameter and/or
+    stations generate duplicated indexes.
 
     Parameters
     ----------
@@ -87,8 +88,8 @@ def cetesb_retrieve(cetesb_login: str, cetesb_password: str,
     csv : Bool, optional
         Export to csv file. The default is False.
     all_dates : Bool, optional
-        Make a complete df with all dates. Setting as false can reduce the output size.
-        The default is True.
+        Make a complete df with all dates. Setting as false can
+        reduce the output size. The default is True.
 
     Returns
     -------
@@ -369,7 +370,7 @@ def cetesb_retrieve_pol(cetesb_login, cetesb_password,
                         start_date, end_date, station,
                         csv=False, voc=False):
     '''
-    Download photochemical pollutants 
+    Download photochemical pollutants
 
     Parameters
     ----------
@@ -467,7 +468,7 @@ def cetesb_retrieve_met(cetesb_login, cetesb_password,
     Returns
     -------
     all_met_df : pandas DataFrame
-        Data Frame with date index  (America/Sao_Paulo), 
+        Data Frame with date index  (America/Sao_Paulo),
         TC, RH, WS and WD columns.
 
     '''
